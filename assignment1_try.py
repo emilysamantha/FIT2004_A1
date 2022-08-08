@@ -12,6 +12,7 @@ def analyze(results: list, roster: int, score: int) -> list:
 
     TODO:
     - Check for length 1 results
+    - Check for less than 10 matches
     """
     # Create top10_matches and searched_matches arrays
     top10_matches = []
@@ -38,17 +39,12 @@ def analyze(results: list, roster: int, score: int) -> list:
     results_filter = radix_sort_score(results_filter)
     lst = radix_sort_score(lst)
 
-    removed_count = 0
-    for i in range(1, len(results)):            # O(N)
-        if results_filter[i] == results_filter[i - 1]:
-            lst.pop(i - removed_count)
-            removed_count += 1
-
-    print("results_filter:")
-    print(results_filter)
-
-    print("Filtered lst:")
-    print(lst)
+    if len(results_filter) > 1:
+        removed_count = 0
+        for i in range(1, len(results)):            # O(N)
+            if results_filter[i] == results_filter[i - 1]:
+                lst.pop(i - removed_count)
+                removed_count += 1
 
     # Sort team2 in lexicographical order
     lst = radix_sort_team(lst, roster, 1)       # O(M) * (N)
@@ -59,8 +55,13 @@ def analyze(results: list, roster: int, score: int) -> list:
     # Sort score in descending order
     lst = radix_sort_score(lst)                 # O(N)
 
+    num_top_matches = 10
+
+    if len(lst) < 10:
+        num_top_matches = len(lst)
+
     # Grab top 10 highest matches from sorted results
-    for i in range(10):  # O(1)
+    for i in range(num_top_matches):  # O(1)
         top10_matches.append(lst[i])
 
     return top10_matches
@@ -200,9 +201,6 @@ results = [["AAB", "AAB", 35], ["AAB", "BBA", 49], ["BAB", "BAB", 42],
            ["ABA", "ABB", 44], ["BBB", "BAB", 32], ["AAA", "AAB", 36],
            ["ABA", "BBB", 48], ["BBB", "ABA", 33], ["AAB", "BBA", 30],
            ["ABB", "BBB", 68], ["BAB", "BBB", 52]]
+one_match = [["CBA", "DBD", 85]]
 
-
-# print("Before: ")
-# print(example)
-# print("After: ")
-print(analyze(results, 2, 0))
+print(analyze(one_match, 4, 0))
