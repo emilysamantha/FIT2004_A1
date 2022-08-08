@@ -1,11 +1,10 @@
 """
 TO_DO:
 - [DONE] Filter duplicates -> sort each team string and find ones that match (same team1, team2, and score)
-- Fix complexity for when sorting by team -> line 81, going through list to check for same takes O(N) and
-  sorting the team itself takes O(N*M)
 - [DONE] Try moving the sort by team to outside the main radix sort
 - [DONE] Confirm it's ok to sort in ascending order, then reverse it
 - Confirm whether we can use deepcopy
+- Confirm complexity of team sort
 
 """
 import copy
@@ -32,7 +31,7 @@ def analyze(results: list, roster: int, score: int) -> list:
     # Sort by team1
     starting_index = 0
     stopping_index = 0
-    for i in range(1, len(sorted_results)):         # O(N) *
+    for i in range(1, len(sorted_results)):         # O(N) * O(M) in total
         # If the current score is equal to the previous score,
         # set the current index as stopping index
         if sorted_results[i][2] == sorted_results[i - 1][2]:
@@ -41,6 +40,7 @@ def analyze(results: list, roster: int, score: int) -> list:
         # sort team1 from the starting_index up to the stopping_index
         elif sorted_results[i][2] != sorted_results[i - 1][2] and starting_index < stopping_index:
             sorted_sublist = radix_sort_team1(sorted_results, roster, starting_index, stopping_index + 1)
+            # Copy sorted_sublist back into sorted_results
             for j in range(starting_index, stopping_index + 1):
                 sorted_results[j] = sorted_sublist[j - starting_index]
             starting_index = i
