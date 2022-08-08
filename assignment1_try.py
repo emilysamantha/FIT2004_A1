@@ -1,8 +1,9 @@
 """
 Questions:
-- Are we allowed to modify the original list that is passed in?
 - Can we use deepcopy?
 
+TODO:
+- Documentation and complexity
 """
 import copy
 
@@ -11,8 +12,8 @@ def analyze(results: list, roster: int, score: int) -> list:
     """
 
     TODO:
-    - Check for length 1 results
-    - Check for less than 10 matches
+    - Decompose
+    - Getting score higher than target, need to grab all matches with the next highest score
     """
     # Create top10_matches and searched_matches arrays
     top10_matches = []
@@ -41,7 +42,7 @@ def analyze(results: list, roster: int, score: int) -> list:
 
     if len(results_filter) > 1:
         removed_count = 0
-        for i in range(1, len(results)):            # O(N)
+        for i in range(1, len(results)):        # O(N)
             if results_filter[i] == results_filter[i - 1]:
                 lst.pop(i - removed_count)
                 removed_count += 1
@@ -56,15 +57,46 @@ def analyze(results: list, roster: int, score: int) -> list:
     lst = radix_sort_score(lst)                 # O(N)
 
     num_top_matches = 10
-
     if len(lst) < 10:
         num_top_matches = len(lst)
 
     # Grab top 10 highest matches from sorted results
-    for i in range(num_top_matches):  # O(1)
+    for i in range(num_top_matches):            # O(1)
         top10_matches.append(lst[i])
 
-    return top10_matches
+    # Look for searched_matches
+    found = False
+    next_highest = 101
+    if score < 50:
+        for i in range(len(lst)):   # O(N)
+            if (100 - lst[i][2]) == score:
+                searched_matches.append([lst[i][1], lst[i][0], 100 - lst[i][2]])
+                found = True
+            elif (100 - lst[i][2]) > score and found:
+                break
+            elif (100 - lst[i][2]) > next_highest:
+                break
+            elif (100 - lst[i][2]) > score and not found:
+                searched_matches.append([lst[i][1], lst[i][0], 100 - lst[i][2]])
+                next_highest = 100 - lst[i][2]
+            elif not found and (100 - lst[i][2]) == next_highest:
+                searched_matches.append([lst[i][1], lst[i][0], 100 - lst[i][2]])
+    else:
+        for i in range(len(lst) - 1, -1, -1):   # O(N)
+            if lst[i][2] == score:
+                searched_matches.insert(0, lst[i])
+                found = True
+            elif lst[i][2] > score and found:
+                break
+            elif lst[i][2] > next_highest:
+                break
+            elif lst[i][2] > score and not found:
+                searched_matches.append(lst[i])
+                next_highest = lst[i][2]
+            elif not found and lst[i][2] == next_highest:
+                searched_matches.append(lst[i])
+
+    return [top10_matches, searched_matches]
 
 
 def counting_sort_string(string: str, roster: int) -> str:
@@ -203,4 +235,4 @@ results = [["AAB", "AAB", 35], ["AAB", "BBA", 49], ["BAB", "BAB", 42],
            ["ABB", "BBB", 68], ["BAB", "BBB", 52]]
 one_match = [["CBA", "DBD", 85]]
 
-print(analyze(one_match, 4, 0))
+print(analyze(results, 5, 63))
