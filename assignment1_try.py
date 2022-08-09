@@ -4,20 +4,43 @@ Questions:
 
 TODO:
 - Documentation and complexity
+- Confirm space complexity
 """
 import copy
 
 
 def analyze(results: list, roster: int, score: int) -> list:
     """
+    Performs an analysis on tournament results. Uses radix sort and counting sort to perform
+    the analysis on the list of matches.
+
+    :Input:
+        results:
+            Past tournament data represented as a list of lists. The inner list can be
+            described as [team1, team2, score], where team1 and team2 are uppercase strings
+            and score is an integer value in the range of 0 to 100 inclusive.
+        roster:
+            Positive integer to denote the character set used in team1 and team2.
+            For example, roster=5 indicates a character set of {A, B, C, D, E}
+        score:
+            The score we want to search for in searchedmatches.
+
+    :Return:
+        lst:
+             List of findings denoted as [top10matches, searchedmatches], where
+             top10matches is a list of 10 matches with the highest score and
+             searchedmatches is a list of matches with the same score as score
+
+    :Time Complexity: O(M * N)
+    :Aux Space Complexity: O(N)     ??
 
     TODO:
     - Decompose
-    - Getting score higher than target, need to grab all matches with the next highest score
+
     """
     # Create top10_matches and searched_matches arrays
-    top10_matches = []
-    searched_matches = []
+    top10matches = []
+    searchedmatches = []
 
     # Create lst which is a deepcopy of results, to avoid modifying the original list
     lst = copy.deepcopy(results)                # O(N)
@@ -62,46 +85,59 @@ def analyze(results: list, roster: int, score: int) -> list:
 
     # Grab top 10 highest matches from sorted results
     for i in range(num_top_matches):            # O(1)
-        top10_matches.append(lst[i])
+        top10matches.append(lst[i])
 
-    # Look for searched_matches
+    # Look for searchedmatches
     found = False
     next_highest = 101
     if score < 50:
         for i in range(len(lst)):   # O(N)
             if (100 - lst[i][2]) == score:
-                searched_matches.append([lst[i][1], lst[i][0], 100 - lst[i][2]])
+                searchedmatches.append([lst[i][1], lst[i][0], 100 - lst[i][2]])
                 found = True
             elif (100 - lst[i][2]) > score and found:
                 break
             elif (100 - lst[i][2]) > next_highest:
                 break
             elif (100 - lst[i][2]) > score and not found:
-                searched_matches.append([lst[i][1], lst[i][0], 100 - lst[i][2]])
+                searchedmatches.append([lst[i][1], lst[i][0], 100 - lst[i][2]])
                 next_highest = 100 - lst[i][2]
             elif not found and (100 - lst[i][2]) == next_highest:
-                searched_matches.append([lst[i][1], lst[i][0], 100 - lst[i][2]])
+                searchedmatches.append([lst[i][1], lst[i][0], 100 - lst[i][2]])
     else:
         for i in range(len(lst) - 1, -1, -1):   # O(N)
             if lst[i][2] == score:
-                searched_matches.insert(0, lst[i])
+                searchedmatches.insert(0, lst[i])
                 found = True
             elif lst[i][2] > score and found:
                 break
             elif lst[i][2] > next_highest:
                 break
             elif lst[i][2] > score and not found:
-                searched_matches.append(lst[i])
+                searchedmatches.append(lst[i])
                 next_highest = lst[i][2]
             elif not found and lst[i][2] == next_highest:
-                searched_matches.append(lst[i])
+                searchedmatches.append(lst[i])
 
-    return [top10_matches, searched_matches]
+    return [top10matches, searchedmatches]
 
 
 def counting_sort_string(string: str, roster: int) -> str:
     """
+    Function to sort a string in ascending lexicographical order using counting sort algorithm.
 
+    :Input:
+        string:
+            The string to be sorted
+        roster:
+            Positive integer to denote the character set used in string.
+            For example, roster=5 indicates a character set of {A, B, C, D, E}
+
+    :Return:
+        str: string that has been sorted in ascending lexicographical order
+
+    :Time Complexity: O(M)
+    :Aux Space Complexity: O(M)
     """
     # Create count array
     count = [0 for i in range(roster)]          # O(1)
@@ -124,7 +160,24 @@ def counting_sort_string(string: str, roster: int) -> str:
 
 def radix_sort_team(lst: list, roster: int, team_num: int) -> list:
     """
+    Function to sort one of the teams inside the results list in ascending lexicographical order
+    using radix sort algorithm.
 
+    :Input:
+        lst:
+            The results list to be sorted
+        roster:
+            Positive integer to denote the character set used in team1 and team2.
+            For example, roster=5 indicates a character set of {A, B, C, D, E}
+        team_num:
+            Integer to denote the team number that we want to sort.
+            Team numbers start from 0 (0 to represent team1 and 1 to represent team2)
+
+    :Return:
+        lst: The results list that has been sorted
+
+    :Time Complexity: O(M * N)
+    :Aux Space Complexity: O(N)         ??
     """
     # Determine number of characters in the team
     num_chars = len(lst[0][0])
@@ -140,7 +193,28 @@ def radix_sort_team(lst: list, roster: int, team_num: int) -> list:
 
 def counting_sort_team(lst: list, roster: int, char_place: int, team_num: int) -> list:
     """
+    Function to sort a specified column of characters in ascending lexicographical order
+    using counting sort algorithm.
 
+    :Input:
+        lst:
+            The results list to be sorted
+        roster:
+            Positive integer to denote the character set used in team1 and team2.
+            For example, roster=5 indicates a character set of {A, B, C, D, E}
+        char_place:
+            Integer to denote which character place we are sorting on.
+            1 to denote the last character in the string, 2 to denote the second last
+            character in the string, and so on
+        team_num:
+            Integer to denote the team number that we want to sort.
+            Team numbers start from 0 (0 to represent team1 and 1 to represent team2)
+
+    :Return:
+        lst: The results list that has been sorted
+
+    :Time Complexity: O(N)
+    :Aux Space Complexity: O(N)         ??
     """
     # Create count array
     count = [0 for i in range(roster)]          # O(1)
