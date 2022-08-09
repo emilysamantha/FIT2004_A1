@@ -3,7 +3,6 @@ Questions:
 - Can we use deepcopy?
 
 TODO:
-- Documentation and complexity
 - Confirm space complexity
 """
 import copy
@@ -249,7 +248,18 @@ def counting_sort_team(lst: list, roster: int, char_place: int, team_num: int) -
 
 def radix_sort_score(lst: list) -> list:
     """
+    Function to sort the score inside the results list in decreasing order
+    using radix sort algorithm.
 
+    :Input:
+        lst:
+            The results list to be sorted
+
+    :Return:
+        lst: The results list that has been sorted
+
+    :Time Complexity: O(N)
+    :Aux Space Complexity: O(N)         ??
     """
     # Call countingSort 3 times, looking at one digit at a time starting from the least significant digit
     digit_place = 0
@@ -262,7 +272,20 @@ def radix_sort_score(lst: list) -> list:
 
 def counting_sort_score(lst: list, digit_place: int) -> list:
     """
+    Function to sort a specified digit place in descending order
+    using counting sort algorithm
 
+    :Input:
+        lst:
+            The results list to be sorted
+        digit_place:
+            Integer to denote which digit place we are sorting on
+
+    :Return:
+        lst: The results list that has been sorted
+
+    :Time Complexity: O(N)
+    :Aux Space Complexity: O(N)         ??
     """
     # Create count array
     count = [0 for i in range(10)]              # O(1)
