@@ -46,7 +46,7 @@ def analyze(results: list, roster: int, score: int) -> list:
     switch_format(lst)
 
     # Filter duplicate matches
-    lst = filter_duplicates(lst, results, roster)
+    lst = filter_duplicates(lst, roster)
 
     # Sort team2 in lexicographical order
     lst = radix_sort_team(lst, roster, 1)       # O(M) * (N)
@@ -261,7 +261,7 @@ def radix_sort_score(lst: list) -> list:
     :Time Complexity: O(N)
     :Aux Space Complexity: O(N)         ??
     """
-    # Call countingSort 3 times, looking at one digit at a time starting from the least significant digit
+    # Call counting_sort_score 3 times, looking at one digit at a time starting from the least significant digit
     digit_place = 0
     for i in range(3):                          # O(1) * O(N) = O(N)
         lst = counting_sort_score(lst, digit_place)
@@ -385,7 +385,7 @@ def find_searchedmatches(lst: list, score: int, searchedmatches: list) -> None:
             # we are searching for
             elif not found and score_to_check > score:
                 # Append the match to searchedmatches
-                searchedmatches.append(lst[i])
+                searchedmatches.insert(0, lst[i])
                 # Set next highest to this score
                 next_highest = score_to_check
             # ELse if we have not found an equal match and score_to_check is equal to the next highest score
@@ -410,4 +410,4 @@ results = [["AAB", "AAB", 35], ["AAB", "BBA", 49], ["BAB", "BAB", 42],
            ["ABB", "BBB", 68], ["BAB", "BBB", 52]]
 one_match = [["CBA", "DBD", 85]]
 
-print(analyze(results, 5, 63))
+print(analyze(results, 5, 69))
