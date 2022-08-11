@@ -4,6 +4,8 @@ Questions:
 
 TODO:
 - Confirm space complexity
+- Check edge cases
+- Try removing returning lists
 """
 import copy
 
@@ -22,7 +24,7 @@ def analyze(results: list, roster: int, score: int) -> list:
             Positive integer to denote the character set used in team1 and team2.
             For example, roster=5 indicates a character set of {A, B, C, D, E}
         score:
-            The score we want to search for in searchedmatches.
+            The score we want to search for and return in searchedmatches.
 
     :Return:
         lst:
@@ -30,12 +32,8 @@ def analyze(results: list, roster: int, score: int) -> list:
              top10matches is a list of 10 matches with the highest score and
              searchedmatches is a list of matches with the same score as score
 
-    :Time Complexity: O(M * N)
-    :Aux Space Complexity: O(N)     ??
-
-    TODO:
-    - Decompose
-
+    :Time Complexity: O(N * M)
+    :Aux Space Complexity: O(N * M)     ??
     """
     # Create top10_matches and searched_matches arrays
     top10matches = []
@@ -45,29 +43,10 @@ def analyze(results: list, roster: int, score: int) -> list:
     lst = copy.deepcopy(results)                # O(N)
 
     # Go through results and if a score is less than 50, switch it to its alternate format
-    for i in range(len(lst)):                   # O(N)
-        if lst[i][2] < 50:
-            lst[i] = [lst[i][1], lst[i][0], 100 - lst[i][2]]
+    switch_format(lst)
 
     # Filter duplicate matches
-    # Sort the team string in each match and if they have the same team and score, only keep one
-    results_filter = copy.deepcopy(lst)
-    for i in range(len(lst)):                   # O(N) * O(M)
-        results_filter[i][0] = counting_sort_string(lst[i][0], roster)
-        results_filter[i][1] = counting_sort_string(lst[i][1], roster)
-        lst[i][0] = counting_sort_string(lst[i][0], roster)
-        lst[i][1] = counting_sort_string(lst[i][1], roster)
-
-    # Sort the score in both results_filter and lst
-    results_filter = radix_sort_score(results_filter)
-    lst = radix_sort_score(lst)
-
-    if len(results_filter) > 1:
-        removed_count = 0
-        for i in range(1, len(results)):        # O(N)
-            if results_filter[i] == results_filter[i - 1]:
-                lst.pop(i - removed_count)
-                removed_count += 1
+    lst = filter_duplicates(lst, results, roster)
 
     # Sort team2 in lexicographical order
     lst = radix_sort_team(lst, roster, 1)       # O(M) * (N)
@@ -78,6 +57,7 @@ def analyze(results: list, roster: int, score: int) -> list:
     # Sort score in descending order
     lst = radix_sort_score(lst)                 # O(N)
 
+    # If the number of matches in results is less than 10, set num_top_matches as the length of results
     num_top_matches = 10
     if len(lst) < 10:
         num_top_matches = len(lst)
@@ -87,38 +67,58 @@ def analyze(results: list, roster: int, score: int) -> list:
         top10matches.append(lst[i])
 
     # Look for searchedmatches
-    found = False
-    next_highest = 101
-    if score < 50:
-        for i in range(len(lst)):   # O(N)
-            if (100 - lst[i][2]) == score:
-                searchedmatches.append([lst[i][1], lst[i][0], 100 - lst[i][2]])
-                found = True
-            elif (100 - lst[i][2]) > score and found:
-                break
-            elif (100 - lst[i][2]) > next_highest:
-                break
-            elif (100 - lst[i][2]) > score and not found:
-                searchedmatches.append([lst[i][1], lst[i][0], 100 - lst[i][2]])
-                next_highest = 100 - lst[i][2]
-            elif not found and (100 - lst[i][2]) == next_highest:
-                searchedmatches.append([lst[i][1], lst[i][0], 100 - lst[i][2]])
-    else:
-        for i in range(len(lst) - 1, -1, -1):   # O(N)
-            if lst[i][2] == score:
-                searchedmatches.insert(0, lst[i])
-                found = True
-            elif lst[i][2] > score and found:
-                break
-            elif lst[i][2] > next_highest:
-                break
-            elif lst[i][2] > score and not found:
-                searchedmatches.append(lst[i])
-                next_highest = lst[i][2]
-            elif not found and lst[i][2] == next_highest:
-                searchedmatches.append(lst[i])
+    find_searchedmatches(lst, score, searchedmatches)
 
     return [top10matches, searchedmatches]
+
+
+def switch_format(lst: list) -> None:
+    """
+    Function to switch the format of matches that have a score below 50.
+    Switches team1 with team2 and sets the score of the match as the alternate format (100-score).
+
+    :Input:
+        lst: The results list
+
+    :Time Complexity: O(N)
+    :Aux Space Complexity: ??
+    """
+    for i in range(len(lst)):  # O(N)
+        if lst[i][2] < 50:
+            lst[i] = [lst[i][1], lst[i][0], 100 - lst[i][2]]
+
+
+def filter_duplicates(lst: list, roster: int) -> list:
+    """
+    Function to delete any duplicate matches, meaning matches that have the same team1, team2, and score.
+
+    :Input:
+        lst: The results list to be filtered
+        roster: Positive integer to denote the character set used in team1 and team2
+
+    :Output:
+        lst: The results list that has been filtered.
+
+    :Time Complexity: O(N * M)
+    :Aux Space Complexity: O(max(N, M)) ??
+    """
+    # Sort the team string in each match and if they have the same team and score, only keep one
+    results_filter = copy.deepcopy(lst)
+    for i in range(len(lst)):  # O(N) * O(M)
+        lst[i][0] = counting_sort_string(lst[i][0], roster)
+        lst[i][1] = counting_sort_string(lst[i][1], roster)
+        results_filter[i][0] = lst[i][0]
+        results_filter[i][1] = lst[i][1]
+    # Sort the score in both results_filter and lst
+    lst = radix_sort_score(lst)
+    results_filter = copy.deepcopy(lst)
+    if len(results_filter) > 1:
+        removed_count = 0
+        for i in range(1, len(lst)):  # O(N)
+            if results_filter[i] == results_filter[i - 1]:
+                lst.pop(i - removed_count)
+                removed_count += 1
+    return lst
 
 
 def counting_sort_string(string: str, roster: int) -> str:
@@ -314,6 +314,84 @@ def counting_sort_score(lst: list, digit_place: int) -> list:
         position[digit_processed] += 1
 
     return output
+
+
+def find_searchedmatches(lst: list, score: int, searchedmatches: list) -> None:
+    """
+    Function that goes through the sorted lst to find a match with the score that is passed.
+
+    :Input:
+        lst: Past tournament data represented as a list of lists that has been sorted by score
+        in descending order, by team1 in ascending lexicographical order if score is equal, and by
+        team2 in ascending lexicographical order if score and team1 are equal.
+        score: The score we want to search for and return in searchedmatches.
+        searchedmatches: list of matches with the same score as score.
+
+    :Time Complexity: O(N)
+    :Aux Space Complexity: O(N)
+    """
+    # Create flag to indicate whether a match has been found
+    found = False
+    next_highest = 101
+
+    # If the score we are searching for is less than 50
+    if score < 50:
+        # Iterate through lst from the smallest index (going through lst from the smallest score going up)
+        for i in range(len(lst)):       # O(N)
+            # Invert the score in lst
+            score_to_check = 100 - lst[i][2]
+
+            # If score_to_check is equal to the score we are searching for
+            if score_to_check == score:
+                # Append the match to searchedmatches, but in the alternate format
+                searchedmatches.append([lst[i][1], lst[i][0], score_to_check])
+                # Mark found as True
+                found = True
+            # Else if we have found an equal score and score_to_check is greater than the score
+            # or if we have not found an equal score (meaning we have appended the next highest score)
+            # and score_to_check is greater than the next highest score
+            elif (found and score_to_check > score) or (not found and score_to_check > next_highest):
+                # Stop searching (break out of the loop)
+                break
+            # Else if we have not found an equal score and score_to_check is greater than the score
+            # we are searching for
+            elif not found and score_to_check > score:
+                # Append the match to searchedmatches, but in the alternate format
+                searchedmatches.append([lst[i][1], lst[i][0], score_to_check])
+                # Set next highest to this score
+                next_highest = score_to_check
+            # ELse if we have not found an equal match and score_to_check is equal to the next highest score
+            elif not found and score_to_check == next_highest:
+                # Append the match to searchedmatches, but in the alternate format
+                searchedmatches.append([lst[i][1], lst[i][0], score_to_check])
+    # Else if the score we are searching for is 50 or greater
+    else:
+        # Going through lst from the largest index (going through lst from the smallest score going up)
+        for i in range(len(lst) - 1, -1, -1):  # O(N)
+            score_to_check = lst[i][2]
+            # If score_to_check is equal to the score we are searching for
+            if score_to_check == score:
+                # Append the match to searchedmatches
+                searchedmatches.insert(0, lst[i])
+                # Mark found as True
+                found = True
+            # ELse if we have found an equal score and score to check is greater than the score
+            # or if we have not found an equal score (meaning we have appended the next highest score)
+            # and score_to_check is greater than the next highest score
+            elif (found and score_to_check > score) or (not found and score_to_check > next_highest):
+                # Stop searching (break out of the loop)
+                break
+            # Else if we have not found an equal score and score_to_check is greater than the score
+            # we are searching for
+            elif not found and score_to_check > score:
+                # Append the match to searchedmatches
+                searchedmatches.append(lst[i])
+                # Set next highest to this score
+                next_highest = score_to_check
+            # ELse if we have not found an equal match and score_to_check is equal to the next highest score
+            elif not found and lst[i][2] == next_highest:
+                # Append the match to searchedmatches
+                searchedmatches.append(lst[i])
 
 
 example = [["CBA", "DBD", 85],
