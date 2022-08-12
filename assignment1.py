@@ -45,10 +45,10 @@ def analyze(results: list, roster: int, score: int) -> list:
         results[i][1] = counting_sort_string(results[i][1], roster)
 
     # Sort team2 in lexicographical order
-    radix_sort_team(results, roster, 1)       # O(M) * (N)
+    results = radix_sort_team(results, roster, 1)       # O(M) * (N)
 
     # Sort team1 in lexicographical order
-    radix_sort_team(results, roster, 0)       # O(M) * (N)
+    results = radix_sort_team(results, roster, 0)       # O(M) * (N)
 
     # Sort score in descending order
     results = radix_sort_score(results)       # O(N)
@@ -123,7 +123,7 @@ def counting_sort_string(string: str, roster: int) -> str:
     return output
 
 
-def radix_sort_team(lst: list, roster: int, team_num: int) -> None:
+def radix_sort_team(lst: list, roster: int, team_num: int) -> list:
     """
     Function to sort one of the teams inside the results list in ascending lexicographical order
     using radix sort algorithm.
@@ -138,8 +138,8 @@ def radix_sort_team(lst: list, roster: int, team_num: int) -> None:
             Integer to denote the team number that we want to sort.
             Team numbers start from 0 (0 to represent team1 and 1 to represent team2)
 
-    :Postcondition:
-        lst team is sorted by ascending lexicographical order
+    :Return:
+        lst: The results list that has been sorted
 
     :Time Complexity: O(M * N)
     :Aux Space Complexity: O(N)         ??
@@ -152,6 +152,8 @@ def radix_sort_team(lst: list, roster: int, team_num: int) -> None:
     for _ in range(num_chars):                  # O(M) * O(N)
         lst = counting_sort_team(lst, roster, char_place, team_num)
         char_place += 1
+
+    return lst
 
 
 def counting_sort_team(lst: list, roster: int, char_place: int, team_num: int) -> list:
