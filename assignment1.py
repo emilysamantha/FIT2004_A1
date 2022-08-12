@@ -293,7 +293,6 @@ def filter_duplicates(lst: list) -> None:
     :Aux Space Complexity: O(N) ??
     """
     # Go through the list and if they have the same team and score, only keep one
-    removed_count = 0
     i = 1
     length = len(lst)
     while i < length:
