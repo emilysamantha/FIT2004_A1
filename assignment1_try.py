@@ -45,8 +45,10 @@ def analyze(results: list, roster: int, score: int) -> list:
     # Go through results and if a score is less than 50, switch it to its alternate format
     switch_format(lst)
 
-    # Filter duplicate matches
-    lst = filter_duplicates(lst, roster)
+    # Sort the team string in each match
+    for i in range(len(lst)):       # O(N) * O(M)
+        lst[i][0] = counting_sort_string(lst[i][0], roster)
+        lst[i][1] = counting_sort_string(lst[i][1], roster)
 
     # Sort team2 in lexicographical order
     lst = radix_sort_team(lst, roster, 1)       # O(M) * (N)
@@ -56,6 +58,9 @@ def analyze(results: list, roster: int, score: int) -> list:
 
     # Sort score in descending order
     lst = radix_sort_score(lst)                 # O(N)
+
+    # Filter duplicate matches
+    lst = filter_duplicates(lst)
 
     # If the number of matches in results is less than 10, set num_top_matches as the length of results
     num_top_matches = 10
@@ -86,39 +91,6 @@ def switch_format(lst: list) -> None:
     for i in range(len(lst)):  # O(N)
         if lst[i][2] < 50:
             lst[i] = [lst[i][1], lst[i][0], 100 - lst[i][2]]
-
-
-def filter_duplicates(lst: list, roster: int) -> list:
-    """
-    Function to delete any duplicate matches, meaning matches that have the same team1, team2, and score.
-
-    :Input:
-        lst: The results list to be filtered
-        roster: Positive integer to denote the character set used in team1 and team2
-
-    :Output:
-        lst: The results list that has been filtered.
-
-    :Time Complexity: O(N * M)
-    :Aux Space Complexity: O(max(N, M)) ??
-    """
-    # Sort the team string in each match and if they have the same team and score, only keep one
-    results_filter = copy.deepcopy(lst)
-    for i in range(len(lst)):  # O(N) * O(M)
-        lst[i][0] = counting_sort_string(lst[i][0], roster)
-        lst[i][1] = counting_sort_string(lst[i][1], roster)
-        results_filter[i][0] = lst[i][0]
-        results_filter[i][1] = lst[i][1]
-    # Sort the score in both results_filter and lst
-    lst = radix_sort_score(lst)
-    results_filter = copy.deepcopy(lst)
-    if len(results_filter) > 1:
-        removed_count = 0
-        for i in range(1, len(lst)):  # O(N)
-            if results_filter[i] == results_filter[i - 1]:
-                lst.pop(i - removed_count)
-                removed_count += 1
-    return lst
 
 
 def counting_sort_string(string: str, roster: int) -> str:
@@ -316,6 +288,30 @@ def counting_sort_score(lst: list, digit_place: int) -> list:
     return output
 
 
+def filter_duplicates(lst: list) -> list:
+    """
+    Function to delete any duplicate matches, meaning matches that have the same team1, team2, and score.
+
+    :Input:
+        lst: The results list to be filtered
+
+    :Output:
+        lst: The results list that has been filtered.
+
+    :Time Complexity: O(N)
+    :Aux Space Complexity: O(N) ??
+    """
+    # Go through the list and if they have the same team and score, only keep one
+    lst_filter = copy.deepcopy(lst)
+    if len(lst_filter) > 1:
+        removed_count = 0
+        for i in range(1, len(lst)):  # O(N)
+            if lst_filter[i] == lst_filter[i - 1]:
+                lst.pop(i - removed_count)
+                removed_count += 1
+    return lst
+
+
 def find_searchedmatches(lst: list, score: int, searchedmatches: list) -> None:
     """
     Function that goes through the sorted lst to find a match with the score that is passed.
@@ -410,4 +406,6 @@ results = [["AAB", "AAB", 35], ["AAB", "BBA", 49], ["BAB", "BAB", 42],
            ["ABB", "BBB", 68], ["BAB", "BBB", 52]]
 one_match = [["CBA", "DBD", 85]]
 
-print(analyze(results, 5, 69))
+example2 = [["CBA", "DBD", 85], ["CBA", "DAD", 85], ["CBA", "DBD", 85], ["CBA", "DBD", 85]]
+
+print(analyze(results, 5, 63))
