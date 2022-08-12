@@ -1,75 +1,260 @@
 """
-TO_DO:
-- [DONE] Filter duplicates -> sort each team string and find ones that match (same team1, team2, and score)
-- [DONE] Try moving the sort by team to outside the main radix sort
-- [DONE] Confirm it's ok to sort in ascending order, then reverse it
-- Confirm whether we can use deepcopy
-- Confirm complexity of team sort
+TODO:
+- Confirm space complexity
+- Check edge cases
+- Try removing returning lists
 
 """
-import copy
 
 
 def analyze(results: list, roster: int, score: int) -> list:
     """
+    Performs an analysis on tournament results. Uses radix sort and counting sort to perform
+    the analysis on the list of matches.
 
-    TO-DO:
-    - [DONE] Take into account alternate score
-    - [DONE] Check for duplicate matches (matches that have the same team combination and same score)
-    - Check for results that have less than 10 matches
+    :Input:
+        results:
+            Past tournament data represented as a list of lists. The inner list can be
+            described as [team1, team2, score], where team1 and team2 are uppercase strings
+            and score is an integer value in the range of 0 to 100 inclusive.
+        roster:
+            Positive integer to denote the character set used in team1 and team2.
+            For example, roster=5 indicates a character set of {A, B, C, D, E}
+        score:
+            The score we want to search for and return in searchedmatches.
+
+    :Return:
+        lst:
+             List of findings denoted as [top10matches, searchedmatches], where
+             top10matches is a list of 10 matches with the highest score and
+             searchedmatches is a list of matches with the same score as score
+
+    :Time Complexity: O(N * M)
+    :Aux Space Complexity: O(N * M)     ??
     """
     # Create top10_matches and searched_matches arrays
-    top10_matches = []
-    searched_matches = []
+    top10matches = []
+    searchedmatches = []
 
-    # Sort results using radix sort
-    sorted_results = radix_sort(results, roster)    # O(N)
+    # Go through results and if a score is less than 50, switch it to its alternate format
+    switch_format(results)
 
-    # Reverse sorted_results to be in descending order
-    sorted_results = sorted_results[::-1]
+    # Sort the team string in each match
+    for i in range(len(results)):       # O(N) * O(M)
+        results[i][0] = counting_sort_string(results[i][0], roster)
+        results[i][1] = counting_sort_string(results[i][1], roster)
 
-    # Sort by team1
-    starting_index = 0
-    stopping_index = 0
-    for i in range(1, len(sorted_results)):         # O(N) * O(M) in total
-        # If the current score is equal to the previous score,
-        # set the current index as stopping index
-        if sorted_results[i][2] == sorted_results[i - 1][2]:
-            stopping_index = i
-        # Else if the current score is different from the previous score,
-        # sort team1 from the starting_index up to the stopping_index
-        elif sorted_results[i][2] != sorted_results[i - 1][2] and starting_index < stopping_index:
-            sorted_sublist = radix_sort_team1(sorted_results, roster, starting_index, stopping_index + 1)
-            # Copy sorted_sublist back into sorted_results
-            for j in range(starting_index, stopping_index + 1):
-                sorted_results[j] = sorted_sublist[j - starting_index]
-            starting_index = i
-        # Else if the current score is different from the previous score
-        # and starting_index and stopping_index are the same,
-        # set the current index as the starting_index
-        else:
-            starting_index = i
+    # Sort team2 in lexicographical order
+    radix_sort_team(results, roster, 1)       # O(M) * (N)
+
+    # Sort team1 in lexicographical order
+    radix_sort_team(results, roster, 0)       # O(M) * (N)
+
+    # Sort score in descending order
+    results = radix_sort_score(results)       # O(N)
+
+    # Filter duplicate matches
+    filter_duplicates(results)
+
+    # If the number of matches in results is less than 10, set num_top_matches as the length of results
+    num_top_matches = 10
+    if len(results) < 10:
+        num_top_matches = len(results)
 
     # Grab top 10 highest matches from sorted results
-    for i in range(3):                             # O(1)
-        top10_matches.append(sorted_results[i])
+    for i in range(num_top_matches):            # O(1)
+        top10matches.append(results[i])
 
-    # return [top10_matches, searched_matches]
-    return top10_matches
+    # Look for searchedmatches
+    find_searchedmatches(results, score, searchedmatches)
+
+    return [top10matches, searchedmatches]
 
 
-def counting_sort(lst: list, digit_place: int) -> list:
+def switch_format(lst: list) -> None:
     """
-    Stable counting sort
+    Function to switch the format of matches that have a score below 50.
+    Switches team1 with team2 and sets the score of the match as the alternate format (100-score).
 
-    TIME COMPLEXITY: O(N)
-    SPACE COMPLEXITY: O(N)
+    :Input:
+        lst: The results list
 
+    :Time Complexity: O(N)
+    :Aux Space Complexity: ??
+    """
+    for i in range(len(lst)):  # O(N)
+        if lst[i][2] < 50:
+            lst[i] = [lst[i][1], lst[i][0], 100 - lst[i][2]]
+
+
+def counting_sort_string(string: str, roster: int) -> str:
+    """
+    Function to sort a string in ascending lexicographical order using counting sort algorithm.
+
+    :Input:
+        string:
+            The string to be sorted
+        roster:
+            Positive integer to denote the character set used in string.
+            For example, roster=5 indicates a character set of {A, B, C, D, E}
+
+    :Return:
+        str: string that has been sorted in ascending lexicographical order
+
+    :Time Complexity: O(M)
+    :Aux Space Complexity: O(M)
+    """
+    # Create count array
+    count = [0 for i in range(roster)]          # O(1)
+
+    # Go through each character in string and increment count[char_index] by 1
+    for i in range(len(string)):                # O(M)
+        char_processed = string[i]
+        char_index = ord(char_processed) - 65
+        count[char_index] += 1
+
+    # Create output string
+    output = ""
+
+    # Iterate through count array and append each character
+    for i in range(roster):                     # O(1)
+        output += chr(i + 65) * count[i]
+
+    return output
+
+
+def radix_sort_team(lst: list, roster: int, team_num: int) -> None:
+    """
+    Function to sort one of the teams inside the results list in ascending lexicographical order
+    using radix sort algorithm.
+
+    :Input:
+        lst:
+            The results list to be sorted
+        roster:
+            Positive integer to denote the character set used in team1 and team2.
+            For example, roster=5 indicates a character set of {A, B, C, D, E}
+        team_num:
+            Integer to denote the team number that we want to sort.
+            Team numbers start from 0 (0 to represent team1 and 1 to represent team2)
+
+    :Postcondition:
+        lst team is sorted by ascending lexicographical order
+
+    :Time Complexity: O(M * N)
+    :Aux Space Complexity: O(N)         ??
+    """
+    # Determine number of characters in the team
+    num_chars = len(lst[0][0])
+
+    # Call counting_sort_team team_length times, looking at one character at a time starting from the last character
+    char_place = 1
+    for _ in range(num_chars):                  # O(M) * O(N)
+        lst = counting_sort_team(lst, roster, char_place, team_num)
+        char_place += 1
+
+
+def counting_sort_team(lst: list, roster: int, char_place: int, team_num: int) -> list:
+    """
+    Function to sort a specified column of characters in ascending lexicographical order
+    using counting sort algorithm.
+
+    :Input:
+        lst:
+            The results list to be sorted
+        roster:
+            Positive integer to denote the character set used in team1 and team2.
+            For example, roster=5 indicates a character set of {A, B, C, D, E}
+        char_place:
+            Integer to denote which character place we are sorting on.
+            1 to denote the last character in the string, 2 to denote the second last
+            character in the string, and so on
+        team_num:
+            Integer to denote the team number that we want to sort.
+            Team numbers start from 0 (0 to represent team1 and 1 to represent team2)
+
+    :Return:
+        lst: The results list that has been sorted
+
+    :Time Complexity: O(N)
+    :Aux Space Complexity: O(N)         ??
+    """
+    # Create count array
+    count = [0 for i in range(roster)]          # O(1)
+
+    # Go through each character in lst and increment count[char_index] by 1
+    for i in range(len(lst)):                   # O(N)
+        char_processed = lst[i][team_num][-char_place]
+        char_index = ord(char_processed) - 65
+        count[char_index] += 1
+
+    # Create position array
+    position = [0 for i in range(roster)]       # O(1)
+
+    # Go through each value in count and set position[i] = position[i-1] + count[i-1]
+    for i in range(1, roster):                  # O(1)
+        position[i] = position[i - 1] + count[i - 1]
+
+    # Create output array
+    output = [0 for i in range(len(lst))]       # O(N)
+
+    # Go through each value in lst and set output[position[char_index]] = lst[i]
+    for i in range(len(lst)):                   # O(N)
+        char_processed = lst[i][team_num][-char_place]
+        char_index = ord(char_processed) - 65
+        output[position[char_index]] = lst[i]
+
+        # Increment position[value]
+        position[char_index] += 1
+
+    return output
+
+
+def radix_sort_score(lst: list) -> list:
+    """
+    Function to sort the score inside the results list in decreasing order
+    using radix sort algorithm.
+
+    :Input:
+        lst:
+            The results list to be sorted
+
+    :Return:
+        lst: The results list that has been sorted
+
+    :Time Complexity: O(N)
+    :Aux Space Complexity: O(N)         ??
+    """
+    # Call counting_sort_score 3 times, looking at one digit at a time starting from the least significant digit
+    digit_place = 0
+    for i in range(3):                          # O(1) * O(N) = O(N)
+        lst = counting_sort_score(lst, digit_place)
+        digit_place += 1
+
+    return lst
+
+
+def counting_sort_score(lst: list, digit_place: int) -> list:
+    """
+    Function to sort a specified digit place in descending order
+    using counting sort algorithm
+
+    :Input:
+        lst:
+            The results list to be sorted
+        digit_place:
+            Integer to denote which digit place we are sorting on
+
+    :Return:
+        lst: The results list that has been sorted
+
+    :Time Complexity: O(N)
+    :Aux Space Complexity: O(N)         ??
     """
     # Create count array
     count = [0 for i in range(10)]              # O(1)
 
-    # Iterate through each value in lst and increment count[digit_processed] by 1
+    # Go through each value in lst and increment count[digit_processed] by 1
     for i in range(len(lst)):                   # O(N)
         digit_processed = (lst[i][2] // (10 ** digit_place)) % 10
         count[digit_processed] += 1
@@ -77,14 +262,14 @@ def counting_sort(lst: list, digit_place: int) -> list:
     # Create position array
     position = [0 for i in range(10)]           # O(1)
 
-    # Iterate through each value in count and set position[i] = position[i-1] + count[i-1]
-    for i in range(1, 10):                      # O(1)
-        position[i] = position[i-1] + count[i-1]
+    # Go through each value in count and set position[i] = position[i-1] + count[i-1]
+    for i in range(8, -1, -1):                  # O(1)
+        position[i] = position[i+1] + count[i+1]
 
     # Create output array
     output = [0 for i in range(len(lst))]       # O(N)
 
-    # Iterate through each value in lst and set output[position[digit_processed]] = lst[i]
+    # Go through each value in lst and set output[position[digit_processed]] = lst[i]
     for i in range(len(lst)):                   # O(N)
         digit_processed = (lst[i][2] // (10 ** digit_place)) % 10
         output[position[digit_processed]] = lst[i]
@@ -95,118 +280,122 @@ def counting_sort(lst: list, digit_place: int) -> list:
     return output
 
 
-def radix_sort(lst: list, roster: int) -> list:
+def filter_duplicates(lst: list) -> None:
     """
-    Radix sort
+    Function to delete any duplicate matches, meaning matches that have the same team1, team2, and score.
 
-    TIME COMPLEXITY: O(N)
-    SPACE COMPLEXITY: O(N)
+    :Input:
+        lst: The results list to be filtered
 
+    :Time Complexity: O(N)
+    :Aux Space Complexity: O(N) ??
     """
-    # Create output array
-    output = [lst[i] for i in range(len(lst))]      # O(N)
-
-    # Go through results and if a score is less than 50, switch it to its alternate format
-    for i in range(len(lst)):                       # O(N)
-        if output[i][2] < 50:
-            output[i] = [output[i][1], output[i][0], 100 - output[i][2]]
-
-    # Filter duplicate matches
-    # Sort the team string in each match and if they have the same team and score, only keep one
-    output_filter = copy.deepcopy(output)           # O(N * M)
-    for i in range(len(lst)):
-        output_filter[i][0] = counting_sort_string(output_filter[i][0], roster)
-        output_filter[i][1] = counting_sort_string(output_filter[i][1], roster)
-
+    # Go through the list and if they have the same team and score, only keep one
     removed_count = 0
-    for i in range(1, len(lst)):
-        if output_filter[i] == output_filter[i-1]:
-            output.pop(i - removed_count)
-            removed_count += 1
-
-    # Call countingSort 3 times, looking at one digit at a time starting from the least significant digit
-    digit_place = 0
-    for i in range(3):                              # O(1) * O(N) = O(N)
-        output = counting_sort(output, digit_place)
-        digit_place += 1
-
-    return output
+    i = 1
+    length = len(lst)
+    while i < length:
+        if lst[i] == lst[i - 1]:
+            lst.pop(i)
+            i -= 1
+            length -= 1
+        i += 1
 
 
-def counting_sort_string(string: str, roster: int) -> str:
-    # Create count array
-    count = [0 for i in range(roster)]      # O(1)
+def find_searchedmatches(lst: list, score: int, searchedmatches: list) -> None:
+    """
+    Function that goes through the sorted lst to find a match with the score that is passed.
 
-    # Iterate through each character in string and increment count[char_index] by 1
-    for i in range(len(string)):            # O(M)
-        char_processed = string[i]
-        char_index = ord(char_processed) - 65
-        count[char_index] += 1
+    :Input:
+        lst: Past tournament data represented as a list of lists that has been sorted by score
+        in descending order, by team1 in ascending lexicographical order if score is equal, and by
+        team2 in ascending lexicographical order if score and team1 are equal.
+        score: The score we want to search for and return in searchedmatches.
+        searchedmatches: list of matches with the same score as score.
 
-    # Create output string
-    output = ""
+    :Time Complexity: O(N)
+    :Aux Space Complexity: O(N)
+    """
+    # Create flag to indicate whether a match has been found
+    found = False
+    next_highest = 101
 
-    # Iterate through count array and append each character
-    for i in range(roster):                 # O(1)
-        output += chr(i + 65) * count[i]
+    # If the score we are searching for is less than 50
+    if score < 50:
+        # Iterate through lst from the smallest index (going through lst from the smallest score going up)
+        for i in range(len(lst)):       # O(N)
+            # Invert the score in lst
+            score_to_check = 100 - lst[i][2]
 
-    return output
+            # If score_to_check is equal to the score we are searching for
+            if score_to_check == score:
+                # Append the match to searchedmatches, but in the alternate format
+                searchedmatches.append([lst[i][1], lst[i][0], score_to_check])
+                # Mark found as True
+                found = True
+            # Else if we have found an equal score and score_to_check is greater than the score
+            # or if we have not found an equal score (meaning we have appended the next highest score)
+            # and score_to_check is greater than the next highest score
+            elif (found and score_to_check > score) or (not found and score_to_check > next_highest):
+                # Stop searching (break out of the loop)
+                break
+            # Else if we have not found an equal score and score_to_check is greater than the score
+            # we are searching for
+            elif not found and score_to_check > score:
+                # Append the match to searchedmatches, but in the alternate format
+                searchedmatches.append([lst[i][1], lst[i][0], score_to_check])
+                # Set next highest to this score
+                next_highest = score_to_check
+            # ELse if we have not found an equal match and score_to_check is equal to the next highest score
+            elif not found and score_to_check == next_highest:
+                # Append the match to searchedmatches, but in the alternate format
+                searchedmatches.append([lst[i][1], lst[i][0], score_to_check])
+    # Else if the score we are searching for is 50 or greater
+    else:
+        # Going through lst from the largest index (going through lst from the smallest score going up)
+        for i in range(len(lst) - 1, -1, -1):  # O(N)
+            score_to_check = lst[i][2]
+            # If score_to_check is equal to the score we are searching for
+            if score_to_check == score:
+                # Append the match to searchedmatches
+                searchedmatches.insert(0, lst[i])
+                # Mark found as True
+                found = True
+            # ELse if we have found an equal score and score to check is greater than the score
+            # or if we have not found an equal score (meaning we have appended the next highest score)
+            # and score_to_check is greater than the next highest score
+            elif (found and score_to_check > score) or (not found and score_to_check > next_highest):
+                # Stop searching (break out of the loop)
+                break
+            # Else if we have not found an equal score and score_to_check is greater than the score
+            # we are searching for
+            elif not found and score_to_check > score:
+                # Append the match to searchedmatches
+                searchedmatches.insert(0, lst[i])
+                # Set next highest to this score
+                next_highest = score_to_check
+            # ELse if we have not found an equal match and score_to_check is equal to the next highest score
+            elif not found and lst[i][2] == next_highest:
+                # Append the match to searchedmatches
+                searchedmatches.append(lst[i])
 
 
-def counting_sort_team1(lst: list, roster: int, char_place: int, starting_index: int, stopping_index: int) -> list:
-    # Create count array
-    count = [0 for i in range(roster)]                              # O(1)
+example = [["CBA", "DBD", 85],
+           ["ABC", "BDD", 85],
+           ["EAE", "BCA", 85],
+           ["EEE", "BDB", 17],
+           ["EAD", "ECD", 21],
+           ["ECA", "CDE", 13],
+           ["CDA", "ABA", 76]]
+results = [["AAB", "AAB", 35], ["AAB", "BBA", 49], ["BAB", "BAB", 42],
+           ["AAA", "AAA", 38], ["BAB", "BAB", 36], ["BAB", "BAB", 36],
+           ["ABA", "BBA", 57], ["BBB", "BBA", 32], ["BBA", "BBB", 49],
+           ["BBA", "ABB", 55], ["AAB", "AAA", 58], ["ABA", "AAA", 46],
+           ["ABA", "ABB", 44], ["BBB", "BAB", 32], ["AAA", "AAB", 36],
+           ["ABA", "BBB", 48], ["BBB", "ABA", 33], ["AAB", "BBA", 30],
+           ["ABB", "BBB", 68], ["BAB", "BBB", 52]]
+one_match = [["CBA", "DBD", 85]]
 
-    # Iterate through each value in the sub-array to be sorted and increment count[char_index] by 1
-    for i in range(starting_index, stopping_index):                 # In total for all calls: O(N)
-        char_processed = lst[i][0][-char_place]
-        char_index = ord(char_processed) - 65
-        count[char_index] += 1
+example2 = [["CBA", "DBD", 85], ["CBA", "DAD", 85], ["CBA", "DBD", 85], ["CBA", "DBD", 85]]
 
-    # Create position array
-    position = [0 for i in range(roster)]                           # O(1)
-
-    # Iterate through each value in count and set position[i] = position[i-1] + count[i-1]
-    for i in range(1, roster):                                      # O(1)
-        position[i] = position[i - 1] + count[i - 1]
-
-    # Create output array
-    output = [0 for i in range(starting_index, stopping_index)]     # In total for all calls: O(N)
-
-    # Iterate through each value in the sub-array and set output[position[char_index]] = lst[i]
-    for i in range(starting_index, stopping_index):                 # In total for all calls: O(N)
-        char_processed = lst[i][0][-char_place]
-        char_index = ord(char_processed) - 65
-        output[position[char_index]] = lst[i]
-
-        # Increment position[value]
-        position[char_index] += 1
-
-    return output
-
-
-def radix_sort_team1(lst: list, roster: int, starting_index: int, stopping_index: int) -> list:
-    # If lst is empty, do nothing
-    if len(lst) == 0:
-        return
-
-    # Create result array
-    output = [lst[i] for i in range(starting_index, stopping_index)]    # In total for all calls: O(N)
-
-    # Determine length of team
-    team_length = len(lst[0][0])
-
-    # Call counting_sort_team1 team_length times, looking at one character at a time starting from the last character
-    char_place = 1
-    for _ in range(team_length):                                        # In total for all calls: O(M) * O(N)
-        output = counting_sort_team1(lst, roster, char_place, starting_index, stopping_index)
-        char_place += 1
-
-    return output
-
-list = [["CBA", "DBD", 85], ["ABC", "BDD", 85], ["EAE", "BCA", 85], ["EEE", "BDB", 17], ["EAD", "ECD", 21],
-["ECA", "CDE", 13], ["CDA", "ABA", 76]]
-print("Before: ")
-print(list)
-print("After: ")
-print(analyze(list, 5, 0))
+print(analyze(results, 5, 23))
