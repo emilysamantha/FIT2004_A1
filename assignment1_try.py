@@ -1,13 +1,10 @@
 """
-Questions:
-- Can we use deepcopy?
-
 TODO:
 - Confirm space complexity
 - Check edge cases
 - Try removing returning lists
+
 """
-import copy
 
 
 def analyze(results: list, roster: int, score: int) -> list:
@@ -39,40 +36,37 @@ def analyze(results: list, roster: int, score: int) -> list:
     top10matches = []
     searchedmatches = []
 
-    # Create lst which is a deepcopy of results, to avoid modifying the original list
-    lst = copy.deepcopy(results)                # O(N)
-
     # Go through results and if a score is less than 50, switch it to its alternate format
-    switch_format(lst)
+    switch_format(results)
 
     # Sort the team string in each match
-    for i in range(len(lst)):       # O(N) * O(M)
-        lst[i][0] = counting_sort_string(lst[i][0], roster)
-        lst[i][1] = counting_sort_string(lst[i][1], roster)
+    for i in range(len(results)):       # O(N) * O(M)
+        results[i][0] = counting_sort_string(results[i][0], roster)
+        results[i][1] = counting_sort_string(results[i][1], roster)
 
     # Sort team2 in lexicographical order
-    lst = radix_sort_team(lst, roster, 1)       # O(M) * (N)
+    results = radix_sort_team(results, roster, 1)       # O(M) * (N)
 
     # Sort team1 in lexicographical order
-    lst = radix_sort_team(lst, roster, 0)       # O(M) * (N)
+    results = radix_sort_team(results, roster, 0)       # O(M) * (N)
 
     # Sort score in descending order
-    lst = radix_sort_score(lst)                 # O(N)
+    results = radix_sort_score(results)                 # O(N)
 
     # Filter duplicate matches
-    lst = filter_duplicates(lst)
+    results = filter_duplicates(results)
 
     # If the number of matches in results is less than 10, set num_top_matches as the length of results
     num_top_matches = 10
-    if len(lst) < 10:
-        num_top_matches = len(lst)
+    if len(results) < 10:
+        num_top_matches = len(results)
 
     # Grab top 10 highest matches from sorted results
     for i in range(num_top_matches):            # O(1)
-        top10matches.append(lst[i])
+        top10matches.append(results[i])
 
     # Look for searchedmatches
-    find_searchedmatches(lst, score, searchedmatches)
+    find_searchedmatches(results, score, searchedmatches)
 
     return [top10matches, searchedmatches]
 
@@ -302,13 +296,15 @@ def filter_duplicates(lst: list) -> list:
     :Aux Space Complexity: O(N) ??
     """
     # Go through the list and if they have the same team and score, only keep one
-    lst_filter = copy.deepcopy(lst)
-    if len(lst_filter) > 1:
-        removed_count = 0
-        for i in range(1, len(lst)):  # O(N)
-            if lst_filter[i] == lst_filter[i - 1]:
-                lst.pop(i - removed_count)
-                removed_count += 1
+    removed_count = 0
+    i = 1
+    length = len(lst)
+    while i < length:
+        if lst[i] == lst[i - 1]:
+            lst.pop(i)
+            i -= 1
+            length -= 1
+        i += 1
     return lst
 
 
@@ -408,4 +404,4 @@ one_match = [["CBA", "DBD", 85]]
 
 example2 = [["CBA", "DBD", 85], ["CBA", "DAD", 85], ["CBA", "DBD", 85], ["CBA", "DBD", 85]]
 
-print(analyze(results, 5, 63))
+print(analyze(example, 5, 23))
