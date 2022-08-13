@@ -2,7 +2,6 @@
 TODO:
 - Confirm space complexity
 - Check edge cases
-- Try removing returning lists
 
 """
 
@@ -80,7 +79,7 @@ def switch_format(lst: list) -> None:
         lst: The results list
 
     :Time Complexity: O(N)
-    :Aux Space Complexity: ??
+    :Aux Space Complexity: O(1)
     """
     for i in range(len(lst)):  # O(N)
         if lst[i][2] < 50:
@@ -113,14 +112,18 @@ def counting_sort_string(string: str, roster: int) -> str:
         char_index = ord(char_processed) - 65
         count[char_index] += 1
 
-    # Create output string
-    output = ""
+    # Create array of characters that is part of our output
+    # We create this array to avoid concatenating to a string, which has time complexity of O(M^2)
+    # We then use the join method and pass this array to create our output string
+    chars_to_join = []
 
-    # Iterate through count array and append each character
-    for i in range(roster):                     # O(1)
-        output += chr(i + 65) * count[i]
+    # Go through each letter and append the characters to chars_to_join
+    for i in range(roster):
+        for _ in range(count[i]):
+            chars_to_join += chr(i + 65)
 
-    return output
+    # Return
+    return "".join(chars_to_join)
 
 
 def radix_sort_team(lst: list, roster: int, team_num: int) -> list:
