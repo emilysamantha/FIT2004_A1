@@ -5,7 +5,6 @@ TODO:
 
 """
 
-
 def analyze(results: list, roster: int, score: int) -> list:
     """
     Performs an analysis on tournament results. Uses radix sort and counting sort to perform
@@ -50,7 +49,7 @@ def analyze(results: list, roster: int, score: int) -> list:
     results = radix_sort_team(results, roster, 0)       # O(M) * (N)
 
     # Sort score in descending order
-    results = radix_sort_score(results)       # O(N)
+    results = radix_sort_score(results)                 # O(N)
 
     # Filter duplicate matches
     filter_duplicates(results)
@@ -81,8 +80,11 @@ def switch_format(lst: list) -> None:
     :Time Complexity: O(N)
     :Aux Space Complexity: O(1)
     """
+    # Go through each match in the list
     for i in range(len(lst)):  # O(N)
+        # If the score is less than 50
         if lst[i][2] < 50:
+            # Flip the teams and invert the score
             lst[i] = [lst[i][1], lst[i][0], 100 - lst[i][2]]
 
 
@@ -107,7 +109,7 @@ def counting_sort_string(string: str, roster: int) -> str:
     count = [0 for i in range(roster)]          # O(1)
 
     # Go through each character in string and increment count[char_index] by 1
-    for i in range(len(string)):                # O(M)
+    for i in range(len(string)):        # O(M)
         char_processed = string[i]
         char_index = ord(char_processed) - 65
         count[char_index] += 1
@@ -120,10 +122,10 @@ def counting_sort_string(string: str, roster: int) -> str:
     # Go through each letter and append the characters to chars_to_join
     for i in range(roster):
         for _ in range(count[i]):
-            chars_to_join += chr(i + 65)
+            chars_to_join.append(chr(i + 65))
 
-    # Return
-    return "".join(chars_to_join)
+    # Return the final output string by using the join method
+    return "".join(chars_to_join)        # O(M)
 
 
 def radix_sort_team(lst: list, roster: int, team_num: int) -> list:
@@ -145,10 +147,13 @@ def radix_sort_team(lst: list, roster: int, team_num: int) -> list:
         lst: The results list that has been sorted
 
     :Time Complexity: O(M * N)
-    :Aux Space Complexity: O(N)         ??
+    :Aux Space Complexity: O(N)
     """
     # Determine number of characters in the team
-    num_chars = len(lst[0][0])
+    if len(lst) == 0:
+        num_chars = 0
+    else:
+        num_chars = len(lst[0][0])
 
     # Call counting_sort_team team_length times, looking at one character at a time starting from the last character
     char_place = 1
@@ -182,7 +187,7 @@ def counting_sort_team(lst: list, roster: int, char_place: int, team_num: int) -
         lst: The results list that has been sorted
 
     :Time Complexity: O(N)
-    :Aux Space Complexity: O(N)         ??
+    :Aux Space Complexity: O(N)
     """
     # Create count array
     count = [0 for i in range(roster)]          # O(1)
@@ -228,7 +233,7 @@ def radix_sort_score(lst: list) -> list:
         lst: The results list that has been sorted
 
     :Time Complexity: O(N)
-    :Aux Space Complexity: O(N)         ??
+    :Aux Space Complexity: O(N)
     """
     # Call counting_sort_score 3 times, looking at one digit at a time starting from the least significant digit
     digit_place = 0
@@ -254,7 +259,7 @@ def counting_sort_score(lst: list, digit_place: int) -> list:
         lst: The results list that has been sorted
 
     :Time Complexity: O(N)
-    :Aux Space Complexity: O(N)         ??
+    :Aux Space Complexity: O(N)
     """
     # Create count array
     count = [0 for i in range(10)]              # O(1)
@@ -293,7 +298,7 @@ def filter_duplicates(lst: list) -> None:
         lst: The results list to be filtered
 
     :Time Complexity: O(N)
-    :Aux Space Complexity: O(N) ??
+    :Aux Space Complexity: O(1)
     """
     # Go through the list and if they have the same team and score, only keep one
     i = 1
@@ -318,7 +323,7 @@ def find_searchedmatches(lst: list, score: int, searchedmatches: list) -> None:
         searchedmatches: list of matches with the same score as score.
 
     :Time Complexity: O(N)
-    :Aux Space Complexity: O(N)
+    :Aux Space Complexity: O(1)
     """
     # Create flag to indicate whether a match has been found
     found = False
@@ -384,13 +389,6 @@ def find_searchedmatches(lst: list, score: int, searchedmatches: list) -> None:
                 searchedmatches.append(lst[i])
 
 
-example = [["CBA", "DBD", 85],
-           ["ABC", "BDD", 85],
-           ["EAE", "BCA", 85],
-           ["EEE", "BDB", 17],
-           ["EAD", "ECD", 21],
-           ["ECA", "CDE", 13],
-           ["CDA", "ABA", 76]]
 results = [["AAB", "AAB", 35], ["AAB", "BBA", 49], ["BAB", "BAB", 42],
            ["AAA", "AAA", 38], ["BAB", "BAB", 36], ["BAB", "BAB", 36],
            ["ABA", "BBA", 57], ["BBB", "BBA", 32], ["BBA", "BBB", 49],
@@ -398,8 +396,5 @@ results = [["AAB", "AAB", 35], ["AAB", "BBA", 49], ["BAB", "BAB", 42],
            ["ABA", "ABB", 44], ["BBB", "BAB", 32], ["AAA", "AAB", 36],
            ["ABA", "BBB", 48], ["BBB", "ABA", 33], ["AAB", "BBA", 30],
            ["ABB", "BBB", 68], ["BAB", "BBB", 52]]
-one_match = [["CBA", "DBD", 85]]
-
-example2 = [["CBA", "DBD", 85], ["CBA", "DAD", 85], ["CBA", "DBD", 85], ["CBA", "DBD", 85]]
 
 print(analyze(results, 5, 23))
