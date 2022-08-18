@@ -1,9 +1,10 @@
 """
-TODO:
-- Confirm space complexity
-- Check edge cases
+FIT2004 Assignment 1
+Author: Emily Samantha Zarry
+ID: 32558945
 
 """
+
 
 def analyze(results: list, roster: int, score: int) -> list:
     """
@@ -395,6 +396,8 @@ results = [["AAB", "AAB", 35], ["AAB", "BBA", 49], ["BAB", "BAB", 42],
            ["BBA", "ABB", 55], ["AAB", "AAA", 58], ["ABA", "AAA", 46],
            ["ABA", "ABB", 44], ["BBB", "BAB", 32], ["AAA", "AAB", 36],
            ["ABA", "BBB", 48], ["BBB", "ABA", 33], ["AAB", "BBA", 30],
-           ["ABB", "BBB", 68], ["BAB", "BBB", 52]]
+           ["ABB", "BBB", 68], ["ABB", "ABB", 68], ["BAB", "BBB", 52]]
 
-print(analyze(results, 5, 23))
+results = [['A', 'B', 50]]
+
+print(analyze(results, 2, 100))
