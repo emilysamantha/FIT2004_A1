@@ -61,8 +61,15 @@ def analyze(results: list, roster: int, score: int) -> list:
         num_top_matches = len(results)
 
     # Grab top 10 highest matches from sorted results
-    for i in range(num_top_matches):  # O(1)
-        top10matches.append(results[i])
+    i = 0
+    appended = 0
+    while appended < num_top_matches:  # O(1)
+        if i == len(results):
+            break
+        if results[i] is not None:
+            top10matches.append(results[i])
+            appended += 1
+        i += 1
 
     # Look for searchedmatches
     find_searchedmatches(results, score, searchedmatches)
@@ -300,14 +307,10 @@ def filter_duplicates(lst: list) -> None:
     :Aux Space Complexity: O(1)
     """
     # Go through the list and if they have the same team and score, only keep one
-    i = 1
-    length = len(lst)
-    while i < length:
-        if lst[i] == lst[i - 1]:
-            lst.pop(i)
-            i -= 1
-            length -= 1
-        i += 1
+    for i in range(len(lst) - 1):
+        if lst[i] == lst[i + 1]:
+            # Set it to None
+            lst[i] = None
 
 
 def find_searchedmatches(lst: list, score: int, searchedmatches: list) -> None:
@@ -330,27 +333,32 @@ def find_searchedmatches(lst: list, score: int, searchedmatches: list) -> None:
 
     # Going through lst from the largest index (going through lst from the smallest score going up)
     for i in range(len(lst) - 1, -1, -1):  # O(N)
-        score_to_check = lst[i][2]
-        # If score_to_check is equal to the score we are searching for
-        if score_to_check == score:
-            # Append the match to searchedmatches
-            searchedmatches.insert(0, lst[i])
-            # Mark found as True
-            found = True
-        # ELse if we have found an equal score and score to check is greater than the score
-        # or if we have not found an equal score (meaning we have appended the next highest score)
-        # and score_to_check is greater than the next highest score
-        elif (found and score_to_check > score) or (not found and score_to_check > next_highest):
-            # Stop searching (break out of the loop)
-            break
-        # Else if we have not found an equal score and score_to_check is greater than the score
-        # we are searching for
-        elif not found and score_to_check > score:
-            # Append the match to searchedmatches
-            searchedmatches.insert(0, lst[i])
-            # Set next highest to this score
-            next_highest = score_to_check
-        # ELse if we have not found an equal match and score_to_check is equal to the next highest score
-        elif not found and lst[i][2] == next_highest:
-            # Append the match to searchedmatches
-            searchedmatches.append(lst[i])
+        if lst[i] is not None:
+            score_to_check = lst[i][2]
+            # If score_to_check is equal to the score we are searching for
+            if score_to_check == score:
+                # Append the match to searchedmatches
+                searchedmatches.insert(0, lst[i])
+                # Mark found as True
+                found = True
+            # ELse if we have found an equal score and score to check is greater than the score
+            # or if we have not found an equal score (meaning we have appended the next highest score)
+            # and score_to_check is greater than the next highest score
+            elif (found and score_to_check > score) or (not found and score_to_check > next_highest):
+                # Stop searching (break out of the loop)
+                break
+            # Else if we have not found an equal score and score_to_check is greater than the score
+            # we are searching for
+            elif not found and score_to_check > score:
+                # Append the match to searchedmatches
+                searchedmatches.insert(0, lst[i])
+                # Set next highest to this score
+                next_highest = score_to_check
+            # ELse if we have not found an equal match and score_to_check is equal to the next highest score
+            elif not found and lst[i][2] == next_highest:
+                # Append the match to searchedmatches
+                searchedmatches.append(lst[i])
+
+
+results = [['A', 'B', 1], ['B', 'A', 99]]
+print(analyze(results, 26, 0))
